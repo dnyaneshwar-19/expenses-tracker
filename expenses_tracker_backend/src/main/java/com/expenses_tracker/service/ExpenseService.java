@@ -3,61 +3,40 @@ package com.expenses_tracker.service;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.expenses_tracker.entity.Expense;
-import com.expenses_tracker.repository.ExpenseRepository;
 
-@Service
-public class ExpenseService {
+public interface ExpenseService {
 
-    @Autowired
-    private ExpenseRepository expenseRepository;
+    // CREATE
+    Expense addExpense(Expense expense);
 
-    // === Basic CRUD Operations ===
+    // READ
+    List<Expense> getAllExpenses();
 
-    public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
-    }
+    List<Expense> getExpensesByUserId(Long userId);
 
-    public Expense addExpense(Expense expense) {
-        return expenseRepository.save(expense);
-    }
+    List<Expense> getExpensesByType(String expenseType);
 
-    public void deleteExpense(Long id) {
-        expenseRepository.deleteById(id);
-    }
+    Expense getExpenseById(Long id);
 
-    public Expense updateExpense(Long id, Expense updatedExpense) {
-        return expenseRepository.findById(id)
-                .map(expense -> {
-                    expense.setDescription(updatedExpense.getDescription());
-                    expense.setAmount(updatedExpense.getAmount());
-                    expense.setCategory(updatedExpense.getCategory());
-                    expense.setDate(updatedExpense.getDate());
-                    // IMPORTANT: Added paymentMethod to the update logic
-                    expense.setPaymentMethod(updatedExpense.getPaymentMethod()); 
-                    return expenseRepository.save(expense);
-                })
-                .orElseThrow(() -> new RuntimeException("Expense not found with id " + id));
-    }
+    // UPDATE
+    Expense updateExpense(Long id, Expense expenseDetails);
 
-    // === Search and Filter Operations ===
+    // DELETE
+    void deleteExpense(Long id);
 
-    public List<Expense> searchByKeyword(String keyword) {
-        return expenseRepository.searchExpenses(keyword);
-    }
+    // ACTION
+    void togglePin(Long id);
 
-    public List<Expense> filterByCategory(String category) {
-        return expenseRepository.findByCategoryIgnoreCase(category);
-    }
-    
-    public List<Expense> filterByPaymentMethod(String paymentMethod) {
-        return expenseRepository.findByPaymentMethodIgnoreCase(paymentMethod);
-    }
+    // SEARCH
+    List<Expense> searchByKeyword(String keyword);
 
-    public List<Expense> filterByDateRange(LocalDate startDate, LocalDate endDate) {
-        return expenseRepository.findByDateBetween(startDate, endDate);
-    }
+    // FILTERS
+    List<Expense> filterByCategory(String category);
+
+    List<Expense> filterByPaymentMethod(String paymentMethod);
+
+    List<Expense> filterByDateRange(LocalDate startDate, LocalDate endDate);
+
+    List<Expense> filterByTypeAndCategory(String expenseType, String category);
 }

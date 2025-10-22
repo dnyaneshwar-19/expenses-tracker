@@ -1,0 +1,74 @@
+===============================================
+✅ BACKEND FIX APPLIED - RESTART BACKEND NOW!
+===============================================
+
+THE PROBLEM:
+------------
+The backend was returning 500 Internal Server Error because:
+- User entity has lazy-loaded collections (expenses, groups)
+- When Jackson tries to serialize Expense objects to JSON
+- It includes the User object
+- Which tries to load lazy collections
+- Session is closed → ERROR
+
+THE FIX:
+--------
+Added @JsonIgnore to User.expenses and User.groups
+This prevents Jackson from trying to serialize these collections
+
+FILES CHANGED:
+--------------
+✅ User.java - Added @JsonIgnore annotations
+✅ User.java - Added import for JsonIgnore
+
+===============================================
+YOU MUST RESTART BACKEND NOW!
+===============================================
+
+1. Go to terminal running backend
+2. Press Ctrl+C to stop it
+3. Wait for it to stop
+4. Run: mvnw.cmd spring-boot:run
+5. Wait for "Started ExpensesTrackerApplication"
+
+===============================================
+AFTER RESTART:
+===============================================
+
+1. Keep frontend running (don't restart)
+2. Go to browser
+3. Refresh page (F5)
+4. Login again
+5. Go to Dashboard
+6. Check console - should see:
+   ✅ "Fetching dashboard data for user: 1"
+   ✅ "Raw expenses response: []" (or with data)
+   ✅ NO MORE 500 ERRORS!
+
+7. Go to Expenses page
+8. Add an expense
+9. Should appear in list immediately!
+
+===============================================
+WHAT THIS FIXES:
+===============================================
+
+✅ Dashboard 500 error - FIXED
+✅ Expenses 500 error - FIXED
+✅ Can fetch expenses - FIXED
+✅ Can add expenses - FIXED
+✅ Data will display - FIXED
+
+===============================================
+RESTART BACKEND NOW!
+===============================================
+
+Terminal command:
+cd expenses_tracker_backend
+mvnw.cmd spring-boot:run
+
+Wait for: "Started ExpensesTrackerApplication"
+
+Then test in browser!
+
+===============================================

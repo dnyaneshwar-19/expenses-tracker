@@ -1,0 +1,118 @@
+===============================================
+🔍 HOW TO CHECK BROWSER CONSOLE (NOT TERMINAL)
+===============================================
+
+YOU'RE LOOKING AT THE WRONG CONSOLE!
+
+The terminal shows webpack compilation.
+I need to see the BROWSER CONSOLE which shows API calls.
+
+===============================================
+HOW TO OPEN BROWSER CONSOLE:
+===============================================
+
+1. Go to your browser (Chrome/Edge/Firefox)
+2. Make sure you're on http://localhost:3000
+3. Press F12 key (or right-click → Inspect)
+4. Click "Console" tab at the top
+5. You should see logs like:
+   - "Fetching dashboard data for user: X"
+   - "Raw expenses response: [...]"
+   - "Fetching expenses..."
+
+===============================================
+WHAT TO LOOK FOR IN BROWSER CONSOLE:
+===============================================
+
+After Login (Dashboard):
+------------------------
+✅ "Fetching dashboard data for user: 1"
+✅ "Raw expenses response: []" or "[{...}]"
+✅ "Raw budgets response: []"
+✅ "Dashboard stats calculated: {...}"
+
+After Adding Expense:
+---------------------
+✅ "Fetching expenses..."
+✅ "Expenses response: [{...}]"
+
+If you see ERRORS (red text):
+------------------------------
+❌ "Error fetching expenses: ..."
+❌ "401 Unauthorized"
+❌ "Network Error"
+❌ "Cannot read properties of undefined"
+
+===============================================
+STEP BY STEP:
+===============================================
+
+1. Open browser at http://localhost:3000
+2. Press F12
+3. Click "Console" tab
+4. Login
+5. Look at console - what appears?
+6. Click "Expenses"
+7. Click "Add Expense"
+8. Fill form and submit
+9. Look at console - what appears?
+10. Take screenshot of console
+11. Share with me
+
+===============================================
+SCREENSHOT EXAMPLE:
+===============================================
+
+The console should look like this:
+
+Console
+-------
+> Fetching dashboard data for user: 1
+> Raw expenses response: []
+> Raw budgets response: []
+> Dashboard stats calculated: {total: 0, thisMonth: 0}
+> Fetching expenses...
+> Expenses response: []
+
+===============================================
+IF EXPENSES DON'T SHOW:
+===============================================
+
+The browser console will tell us WHY:
+
+Possibility 1: API returns empty array
+  Console shows: "Expenses response: []"
+  Meaning: No expenses in database
+
+Possibility 2: API call fails
+  Console shows: "Error fetching expenses: ..."
+  Meaning: Backend issue
+
+Possibility 3: Data structure mismatch
+  Console shows: "Expenses response: undefined"
+  Meaning: Response format wrong
+
+===============================================
+PLEASE DO THIS:
+===============================================
+
+1. Open browser (not terminal)
+2. Press F12
+3. Go to Console tab
+4. Clear console (trash icon)
+5. Login
+6. Copy ALL console output
+7. Paste here
+
+OR
+
+Take screenshot of browser console and share
+
+===============================================
+THIS IS CRITICAL!
+===============================================
+
+I cannot help without seeing the browser console.
+The terminal only shows compilation, not runtime data.
+
+===============================================
