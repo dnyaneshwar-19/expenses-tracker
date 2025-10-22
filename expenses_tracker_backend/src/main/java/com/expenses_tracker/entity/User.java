@@ -44,6 +44,9 @@ public class User {
     @Column(nullable = false)
     private String preferredCurrency = "INR";
 
+    @Column
+    private String birthdate;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
                joinColumns = @JoinColumn(name = "user_id"),
@@ -116,6 +119,14 @@ public class User {
 
     public void setPreferredCurrency(String preferredCurrency) {
         this.preferredCurrency = preferredCurrency;
+    }
+
+    public String getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(String birthdate) {
+        this.birthdate = birthdate;
     }
 
     public Set<Role> getRoles() {
