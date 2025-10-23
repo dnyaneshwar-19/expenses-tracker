@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,10 +47,26 @@ public class NotificationController {
     }
 
     /**
+     * Mark a specific notification as unread
+     */
+    @PostMapping("/{notificationId}/mark-unread")
+    public void markNotificationAsUnread(@PathVariable Long notificationId) {
+        notificationService.markNotificationAsUnread(notificationId);
+    }
+
+    /**
      * Mark all notifications as read for a user
      */
     @PostMapping("/{userId}/mark-all-read")
     public void markAllNotificationsAsRead(@PathVariable Long userId) {
         notificationService.markAllNotificationsAsRead(userId);
+    }
+
+    /**
+     * Delete a specific notification
+     */
+    @DeleteMapping("/{notificationId}")
+    public void deleteNotification(@PathVariable Long notificationId) {
+        notificationService.deleteNotification(notificationId);
     }
 }

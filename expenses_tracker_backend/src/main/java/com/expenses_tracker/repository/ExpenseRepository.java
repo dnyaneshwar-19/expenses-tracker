@@ -51,4 +51,14 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
      * Find expenses by user ID
      */
     List<Expense> findByUserId(Long userId);
+
+    /**
+     * Find expenses by user ID, ordered by newest first
+     */
+    List<Expense> findByUserIdOrderByDateDesc(Long userId);
+
+    /**
+     * Find all expenses ordered by newest first
+     */
+    List<Expense> findAllByOrderByDateDesc();
 }

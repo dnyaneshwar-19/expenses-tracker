@@ -61,12 +61,12 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
+        return expenseRepository.findAllByOrderByDateDesc();
     }
 
     @Override
     public List<Expense> getExpensesByUserId(Long userId) {
-        return expenseRepository.findByUserId(userId);
+        return expenseRepository.findByUserIdOrderByDateDesc(userId);
     }
 
     @Override

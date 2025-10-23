@@ -46,6 +46,9 @@ public class User {
 
     @Column
     private String birthdate;
+    
+    @Column(length = 1000)
+    private String profilePhotoUrl;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
@@ -54,14 +57,20 @@ public class User {
     @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
-    // This is your existing relationship with Expense
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Expense> expenses;
 
+    // Constructors
+    public User() {}
 
-    // --- Getters and Setters ---
-    
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -125,6 +134,14 @@ public class User {
     public void setBirthdate(String birthdate) {
         this.birthdate = birthdate;
     }
+    
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+    
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
 
     public Set<Role> getRoles() {
         return roles;
@@ -141,5 +158,4 @@ public class User {
     public void setExpenses(Set<Expense> expenses) {
         this.expenses = expenses;
     }
-
 }

@@ -28,6 +28,11 @@ public class RecurringBill {
     private String frequency; // DAILY, WEEKLY, MONTHLY, YEARLY
     private int dayOfMonthDue; // Day of month when bill is due (1-31)
     private LocalDate nextDueDate;
+    
+    // Reminder settings
+    private Integer reminderDaysBefore; // How many days before due date to send reminder (default: 2)
+    private Integer reminderHour; // Hour of day to send reminder (0-23, default: 9 for 9 AM)
+    private Integer reminderMinute; // Minute of hour to send reminder (0-59, default: 0)
 
     // Relationship to User
     @ManyToOne(fetch = FetchType.EAGER)
@@ -128,5 +133,29 @@ public class RecurringBill {
 
     public void setNextDueDate(LocalDate nextDueDate) {
         this.nextDueDate = nextDueDate;
+    }
+
+    public Integer getReminderDaysBefore() {
+        return reminderDaysBefore;
+    }
+
+    public void setReminderDaysBefore(Integer reminderDaysBefore) {
+        this.reminderDaysBefore = reminderDaysBefore;
+    }
+
+    public Integer getReminderHour() {
+        return reminderHour;
+    }
+
+    public void setReminderHour(Integer reminderHour) {
+        this.reminderHour = reminderHour;
+    }
+
+    public Integer getReminderMinute() {
+        return reminderMinute;
+    }
+
+    public void setReminderMinute(Integer reminderMinute) {
+        this.reminderMinute = reminderMinute;
     }
 }

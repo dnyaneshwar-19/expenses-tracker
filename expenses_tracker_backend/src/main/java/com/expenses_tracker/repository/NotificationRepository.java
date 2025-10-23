@@ -11,17 +11,17 @@ import com.expenses_tracker.entity.Notification;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     /**
-     * Find all notifications for a specific user
+     * Find all notifications for a specific user, ordered by newest first
      */
-    List<Notification> findByUserId(Long userId);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     /**
-     * Find all unread notifications for a specific user
+     * Find all unread notifications for a specific user, ordered by newest first
      */
-    List<Notification> findByUserIdAndIsReadFalse(Long userId);
+    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId);
 
     /**
-     * Find all read notifications for a specific user
+     * Find all read notifications for a specific user, ordered by newest first
      */
-    List<Notification> findByUserIdAndIsReadTrue(Long userId);
+    List<Notification> findByUserIdAndIsReadTrueOrderByCreatedAtDesc(Long userId);
 }

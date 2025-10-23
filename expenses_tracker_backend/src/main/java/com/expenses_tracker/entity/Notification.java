@@ -3,6 +3,7 @@ package com.expenses_tracker.entity;
 import java.sql.Timestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -55,10 +56,12 @@ public class Notification {
         this.message = message;
     }
 
+    @JsonProperty("isRead")
     public boolean isRead() {
         return isRead;
     }
 
+    @JsonProperty("isRead")
     public void setRead(boolean read) {
         isRead = read;
     }

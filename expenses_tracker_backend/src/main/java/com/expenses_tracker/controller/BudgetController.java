@@ -3,6 +3,7 @@ package com.expenses_tracker.controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,17 +43,25 @@ public class BudgetController {
      * Create a new budget
      */
     @PostMapping
-    public Budget createBudget(@RequestBody Budget budget) {
-        // Validate that user exists
-        if (budget.getUser() == null || budget.getUser().getId() == null) {
+    public Budget createBudget(@RequestBody Map<String, Object> budgetRequest) {
+        // Extract userId from request
+        Object userIdObj = budgetRequest.get("userId");
+        if (userIdObj == null) {
             throw new RuntimeException("User ID must be provided to create a budget.");
         }
 
-        Long userId = budget.getUser().getId();
+        Long userId = Long.valueOf(userIdObj.toString());
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
+        // Create budget from request data
+        Budget budget = new Budget();
+        budget.setCategory((String) budgetRequest.get("category"));
+        budget.setLimitAmount(new BigDecimal(budgetRequest.get("limitAmount").toString()));
+        budget.setStartDate(LocalDate.parse((String) budgetRequest.get("startDate")));
+        budget.setEndDate(LocalDate.parse((String) budgetRequest.get("endDate")));
         budget.setUser(user);
+        
         return budgetRepository.save(budget);
     }
 

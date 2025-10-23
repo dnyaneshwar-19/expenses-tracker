@@ -1,6 +1,9 @@
 package com.expenses_tracker.controller;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -33,15 +36,42 @@ public class RecurringBillController {
      * Create a new recurring bill
      */
     @PostMapping
-    public RecurringBill createRecurringBill(@RequestBody RecurringBill recurringBill) {
-        // Validate that user exists
-        if (recurringBill.getUser() == null || recurringBill.getUser().getId() == null) {
+    public RecurringBill createRecurringBill(@RequestBody Map<String, Object> billRequest) {
+        // Extract userId from request
+        Object userIdObj = billRequest.get("userId");
+        if (userIdObj == null) {
             throw new RuntimeException("User ID must be provided to create a recurring bill.");
         }
 
-        Long userId = recurringBill.getUser().getId();
+        Long userId = Long.valueOf(userIdObj.toString());
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        // Create recurring bill from request data
+        RecurringBill recurringBill = new RecurringBill();
+        recurringBill.setName((String) billRequest.get("billName"));
+        recurringBill.setAmount(new BigDecimal(billRequest.get("amount").toString()));
+        recurringBill.setCategory((String) billRequest.get("category"));
+        recurringBill.setFrequency((String) billRequest.get("frequency"));
+        recurringBill.setDayOfMonthDue(Integer.valueOf(billRequest.get("dayOfMonthDue").toString()));
+        
+        if (billRequest.containsKey("nextDueDate")) {
+            recurringBill.setNextDueDate(LocalDate.parse((String) billRequest.get("nextDueDate")));
+        }
+        if (billRequest.containsKey("description")) {
+            recurringBill.setDescription((String) billRequest.get("description"));
+        }
+        
+        // Set reminder settings
+        if (billRequest.containsKey("reminderDaysBefore")) {
+            recurringBill.setReminderDaysBefore(Integer.valueOf(billRequest.get("reminderDaysBefore").toString()));
+        }
+        if (billRequest.containsKey("reminderHour")) {
+            recurringBill.setReminderHour(Integer.valueOf(billRequest.get("reminderHour").toString()));
+        }
+        if (billRequest.containsKey("reminderMinute")) {
+            recurringBill.setReminderMinute(Integer.valueOf(billRequest.get("reminderMinute").toString()));
+        }
         
         recurringBill.setUser(user);
         return recurringBillRepository.save(recurringBill);
@@ -84,6 +114,32 @@ public class RecurringBillController {
         existingBill.setAmount(recurringBillDetails.getAmount());
         existingBill.setCategory(recurringBillDetails.getCategory());
         existingBill.setDayOfMonthDue(recurringBillDetails.getDayOfMonthDue());
+        
+        // Update nextDueDate if provided
+        if (recurringBillDetails.getNextDueDate() != null) {
+            existingBill.setNextDueDate(recurringBillDetails.getNextDueDate());
+        }
+        
+        // Update description if provided
+        if (recurringBillDetails.getDescription() != null) {
+            existingBill.setDescription(recurringBillDetails.getDescription());
+        }
+        
+        // Update frequency if provided
+        if (recurringBillDetails.getFrequency() != null) {
+            existingBill.setFrequency(recurringBillDetails.getFrequency());
+        }
+        
+        // Update reminder settings
+        if (recurringBillDetails.getReminderDaysBefore() != null) {
+            existingBill.setReminderDaysBefore(recurringBillDetails.getReminderDaysBefore());
+        }
+        if (recurringBillDetails.getReminderHour() != null) {
+            existingBill.setReminderHour(recurringBillDetails.getReminderHour());
+        }
+        if (recurringBillDetails.getReminderMinute() != null) {
+            existingBill.setReminderMinute(recurringBillDetails.getReminderMinute());
+        }
 
         return recurringBillRepository.save(existingBill);
     }
