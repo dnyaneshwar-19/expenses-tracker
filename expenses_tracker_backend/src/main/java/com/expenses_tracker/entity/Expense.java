@@ -2,14 +2,10 @@ package com.expenses_tracker.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapKeyColumn;
 
 @Entity
 public class Expense {
@@ -43,18 +38,6 @@ public class Expense {
    @JsonIgnore
    private User user;
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "group_id")
-   @JsonIgnore
-   private Group group;
-
-   // Split details for group expenses (userId -> amount)
-   @ElementCollection(fetch = FetchType.EAGER)
-   @CollectionTable(name = "expense_splits", joinColumns = @JoinColumn(name = "expense_id"))
-   @MapKeyColumn(name = "user_id")
-   @Column(name = "amount")
-   @JsonIgnore
-   private Map<Long, BigDecimal> splitDetails = new HashMap<>();
 
     // --- Getters and Setters ---
     
@@ -128,22 +111,6 @@ public class Expense {
 
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public Group getGroup() {
-        return group;
-    }
-
-    public void setGroup(Group group) {
-        this.group = group;
-    }
-
-    public Map<Long, BigDecimal> getSplitDetails() {
-        return splitDetails;
-    }
-
-    public void setSplitDetails(Map<Long, BigDecimal> splitDetails) {
-        this.splitDetails = splitDetails;
     }
 
     public String getCategory() {

@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -23,10 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.expenses_tracker.entity.Expense;
-import com.expenses_tracker.entity.Group;
 import com.expenses_tracker.entity.User;
 import com.expenses_tracker.repository.ExpenseRepository;
-import com.expenses_tracker.repository.GroupRepository;
 import com.expenses_tracker.repository.UserRepository;
 import com.opencsv.CSVWriter;
 
@@ -35,9 +32,6 @@ public class ReportService {
 
     @Autowired
     private ExpenseRepository expenseRepository;
-
-    @Autowired
-    private GroupRepository groupRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -54,21 +48,11 @@ public class ReportService {
             // Write header
             csvWriter.writeNext(new String[]{
                 "Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned", "Group"
+                "Category", "Payment Method", "Type", "Pinned"
             });
 
             // Write data
             for (Expense expense : expenses) {
-                // Fix: Check if group exists without triggering lazy load error
-                String groupName = "Personal";
-                try {
-                    if (expense.getGroup() != null) {
-                        groupName = expense.getGroup().getName();
-                    }
-                } catch (Exception e) {
-                    groupName = "Personal";
-                }
-                
                 csvWriter.writeNext(new String[]{
                     expense.getId().toString(),
                     expense.getTitle(),
@@ -78,8 +62,7 @@ public class ReportService {
                     expense.getCategory(),
                     expense.getPaymentMethod(),
                     expense.getExpenseType(),
-                    expense.isPinned() ? "Yes" : "No",
-                    groupName
+                    expense.isPinned() ? "Yes" : "No"
                 });
             }
         }
@@ -107,7 +90,7 @@ public class ReportService {
             // Create header row
             Row headerRow = sheet.createRow(0);
             String[] headers = {"Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned", "Group"};
+                "Category", "Payment Method", "Type", "Pinned"};
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -126,16 +109,6 @@ public class ReportService {
                 row.createCell(6).setCellValue(expense.getPaymentMethod());
                 row.createCell(7).setCellValue(expense.getExpenseType());
                 row.createCell(8).setCellValue(expense.isPinned() ? "Yes" : "No");
-                // Fix: Check if group exists without triggering lazy load error
-                String groupName = "Personal";
-                try {
-                    if (expense.getGroup() != null) {
-                        groupName = expense.getGroup().getName();
-                    }
-                } catch (Exception e) {
-                    groupName = "Personal";
-                }
-                row.createCell(9).setCellValue(groupName);
             }
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {
@@ -250,161 +223,6 @@ public class ReportService {
         pdfContent.append("                    End of Report - Thank you for using Expenses Tracker\n");
 
         // Convert to bytes
-        return pdfContent.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Generate CSV report for group expenses
-     */
-    public byte[] generateGroupCSVReport(Long groupId) throws IOException {
-        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
-
-        StringWriter stringWriter = new StringWriter();
-        // Write header
-        try (CSVWriter csvWriter = new CSVWriter(stringWriter)) {
-            // Write header
-            csvWriter.writeNext(new String[]{
-                "Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned", "Paid By", "Split Details"
-            });
-
-            // Write data
-            for (Expense expense : expenses) {
-                StringBuilder splitDetails = new StringBuilder();
-                if (expense.getSplitDetails() != null) {
-                    for (Map.Entry<Long, BigDecimal> entry : expense.getSplitDetails().entrySet()) {
-                        User user = userRepository.findById(entry.getKey()).orElse(null);
-                        if (user != null) {
-                            splitDetails.append(user.getUsername()).append(": ₹").append(entry.getValue()).append("; ");
-                        }
-                    }
-                }
-
-                csvWriter.writeNext(new String[]{
-                    expense.getId().toString(),
-                    expense.getTitle(),
-                    expense.getDescription(),
-                    "₹" + expense.getAmount().toString(),
-                    expense.getDate().toString(),
-                    expense.getCategory(),
-                    expense.getPaymentMethod(),
-                    expense.getExpenseType(),
-                    expense.isPinned() ? "Yes" : "No",
-                    expense.getUser().getUsername(),
-                    splitDetails.toString()
-                });
-            }
-        }
-        return stringWriter.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Generate Excel report for group expenses
-     */
-    public byte[] generateGroupExcelReport(Long groupId) throws IOException {
-        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
-        // --- FIX 2: Removed the unused 'group' variable fetch ---
-
-        // --- FIX 1 (same as user report): Declare outputStream here ---
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Group Expenses Report");
-            // Create header style
-            CellStyle headerStyle = workbook.createCellStyle();
-            Font headerFont = workbook.createFont();
-            headerFont.setBold(true);
-            headerStyle.setFont(headerFont);
-            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            // Create header row
-            Row headerRow = sheet.createRow(0);
-            String[] headers = {"Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned", "Paid By", "Split Details"};
-            for (int i = 0; i < headers.length; i++) {
-                Cell cell = headerRow.createCell(i);
-                cell.setCellValue(headers[i]);
-                cell.setCellStyle(headerStyle);
-            }
-            // Create data rows
-            int rowNum = 1;
-            for (Expense expense : expenses) {
-                Row row = sheet.createRow(rowNum++);
-
-                StringBuilder splitDetails = new StringBuilder();
-                if (expense.getSplitDetails() != null) {
-                    for (Map.Entry<Long, BigDecimal> entry : expense.getSplitDetails().entrySet()) {
-                        User user = userRepository.findById(entry.getKey()).orElse(null);
-                        if (user != null) {
-                            splitDetails.append(user.getUsername()).append(": ₹").append(entry.getValue()).append("; ");
-                        }
-                    }
-                }
-
-                row.createCell(0).setCellValue(expense.getId());
-                row.createCell(1).setCellValue(expense.getTitle());
-                row.createCell(2).setCellValue(expense.getDescription());
-                row.createCell(3).setCellValue("₹" + expense.getAmount().toString());
-                row.createCell(4).setCellValue(expense.getDate().toString());
-                row.createCell(5).setCellValue(expense.getCategory());
-                row.createCell(6).setCellValue(expense.getPaymentMethod());
-                row.createCell(7).setCellValue(expense.getExpenseType());
-                row.createCell(8).setCellValue(expense.isPinned() ? "Yes" : "No");
-                row.createCell(9).setCellValue(expense.getUser().getUsername());
-                row.createCell(10).setCellValue(splitDetails.toString());
-            }
-            // Auto-size columns
-            for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-            // --- FIX 1: Write to the outputStream ---
-            workbook.write(outputStream);
-        }
-
-        return outputStream.toByteArray();
-    }
-
-    /**
-     * Generate PDF report for group expenses
-     */
-    public byte[] generateGroupPDFReport(Long groupId) throws IOException {
-        List<Expense> expenses = expenseRepository.findByGroupId(groupId);
-        Group group = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
-
-        // --- FIX 3: Removed unused 'outputStream' variable ---
-
-        StringBuilder pdfContent = new StringBuilder();
-        pdfContent.append("GROUP EXPENSES REPORT\n");
-        pdfContent.append("=====================\n\n");
-        pdfContent.append("Group: ").append(group.getName()).append("\n");
-        pdfContent.append("Description: ").append(group.getDescription()).append("\n");
-        pdfContent.append("Members: ").append(group.getMembers().size()).append("\n");
-        pdfContent.append("Generated: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n\n");
-
-        pdfContent.append("EXPENSES SUMMARY\n");
-        pdfContent.append("================\n");
-        pdfContent.append(String.format("%-5s %-20s %-15s %-12s %-15s %-10s %-15s\n",
-            "ID", "Title", "Amount (₹)", "Date", "Category", "Type", "Paid By"));
-        pdfContent.append("----------------------------------------------------------------------------\n");
-
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (Expense expense : expenses) {
-            pdfContent.append(String.format("%-5s %-20s %-15s %-12s %-15s %-10s %-15s\n",
-                expense.getId().toString(),
-                expense.getTitle().length() > 20 ? expense.getTitle().substring(0, 17) + "..." : expense.getTitle(),
-                "₹" + expense.getAmount().toString(),
-                expense.getDate().toString(),
-                expense.getCategory().length() > 15 ? expense.getCategory().substring(0, 12) + "..." : expense.getCategory(),
-                expense.getExpenseType(),
-                expense.getUser().getUsername()
-            ));
-            totalAmount = totalAmount.add(expense.getAmount());
-        }
-
-        pdfContent.append("----------------------------------------------------------------------------\n");
-        pdfContent.append(String.format("TOTAL EXPENSES: ₹%s\n", totalAmount.toString()));
-        pdfContent.append(String.format("TOTAL COUNT: %d expenses\n", expenses.size()));
-
         return pdfContent.toString().getBytes(StandardCharsets.UTF_8);
     }
 }

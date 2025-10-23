@@ -59,9 +59,6 @@ public class User {
     @JsonIgnore
     private Set<Expense> expenses;
 
-    @ManyToMany(mappedBy = "members", fetch = FetchType.EAGER)
-    @JsonIgnore
-    private Set<Group> groups = new HashSet<>();
 
     // --- Getters and Setters ---
     
@@ -145,11 +142,4 @@ public class User {
         this.expenses = expenses;
     }
 
-    public Set<Group> getGroups() {
-        return groups;
-    }
-
-    public void setGroups(Set<Group> groups) {
-        this.groups = groups;
-    }
 }

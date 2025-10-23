@@ -48,11 +48,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     List<Expense> searchExpenses(@Param("keyword") String keyword);
 
     /**
-     * Find expenses by group ID
-     */
-    List<Expense> findByGroupId(Long groupId);
-
-    /**
      * Find expenses by user ID
      */
     List<Expense> findByUserId(Long userId);

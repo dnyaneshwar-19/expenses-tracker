@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.expenses_tracker.repository.GroupRepository;
 import com.expenses_tracker.repository.UserRepository;
 import com.expenses_tracker.service.ReportService;
 
@@ -31,9 +30,6 @@ public class ReportController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private GroupRepository groupRepository;
 
     /**
      * Generate user expense report in specified format
@@ -89,59 +85,6 @@ public class ReportController {
     }
 
     /**
-     * Generate group expense report in specified format
-     */
-    @GetMapping("/group/{groupId}")
-    public ResponseEntity<?> generateGroupReport(@PathVariable Long groupId,
-                                               @RequestParam String format,
-                                               @AuthenticationPrincipal UserDetails currentUser) {
-        try {
-            // Validate group access
-            validateGroupAccess(groupId, currentUser);
-            
-            // Validate format
-            if (!isValidFormat(format)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Invalid format. Supported: csv, excel, pdf"));
-            }
-            
-            byte[] reportData;
-            String contentType;
-            String fileExtension;
-            
-            switch (format.toLowerCase()) {
-                case "csv":
-                    reportData = reportService.generateGroupCSVReport(groupId);
-                    contentType = "text/csv";
-                    fileExtension = "csv";
-                    break;
-                case "excel":
-                    reportData = reportService.generateGroupExcelReport(groupId);
-                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-                    fileExtension = "xlsx";
-                    break;
-                case "pdf":
-                    reportData = reportService.generateGroupPDFReport(groupId);
-                    contentType = "application/pdf";
-                    fileExtension = "pdf";
-                    break;
-                default:
-                    return ResponseEntity.badRequest().body(Map.of("error", "Unsupported format"));
-            }
-            
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String filename = String.format("group_expenses_%d_%s.%s", groupId, timestamp, fileExtension);
-            
-            return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .body(reportData);
-                
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    /**
      * Get available report formats
      */
     @GetMapping("/formats")
@@ -166,21 +109,6 @@ public class ReportController {
         
         // Check if user is accessing their own data or is admin
         if (!currentUserEntity.getId().equals(userId) && 
-            !currentUserEntity.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"))) {
-            throw new RuntimeException("Access denied");
-        }
-    }
-
-    private void validateGroupAccess(Long groupId, UserDetails currentUser) {
-        if (currentUser == null) {
-            throw new RuntimeException("User not authenticated");
-        }
-        
-        var currentUserEntity = userRepository.findByUsername(currentUser.getUsername())
-            .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-        
-        // Check if user is member of group or is admin
-        if (!groupRepository.isUserMemberOfGroup(groupId, currentUserEntity.getId()) &&
             !currentUserEntity.getRoles().stream().anyMatch(role -> role.getName().name().equals("ROLE_ADMIN"))) {
             throw new RuntimeException("Access denied");
         }

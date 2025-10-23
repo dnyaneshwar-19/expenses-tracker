@@ -1,14 +1,10 @@
 package com.expenses_tracker.entity;
 
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
 @Entity
 public class Category {
@@ -17,11 +13,13 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "category")
-    @JsonManagedReference
-    private List<Expense> expenses;
+    @Column(length = 500)
+    private String description;
+
+    private String icon; // Icon name or emoji
 
     // --- Getters and Setters ---
 
@@ -41,11 +39,19 @@ public class Category {
         this.name = name;
     }
 
-    public List<Expense> getExpenses() {
-        return expenses;
+    public String getDescription() {
+        return description;
     }
 
-    public void setExpenses(List<Expense> expenses) {
-        this.expenses = expenses;
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 }
