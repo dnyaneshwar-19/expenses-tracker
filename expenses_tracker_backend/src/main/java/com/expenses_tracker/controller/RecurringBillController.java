@@ -20,6 +20,7 @@ import com.expenses_tracker.entity.RecurringBill;
 import com.expenses_tracker.entity.User;
 import com.expenses_tracker.repository.RecurringBillRepository;
 import com.expenses_tracker.repository.UserRepository;
+import com.expenses_tracker.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/recurring-bills")
@@ -31,6 +32,9 @@ public class RecurringBillController {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Create a new recurring bill
@@ -142,6 +146,54 @@ public class RecurringBillController {
         }
 
         return recurringBillRepository.save(existingBill);
+    }
+
+    /**
+     * Mark bill as paid
+     */
+    @PostMapping("/{id}/mark-paid")
+    public RecurringBill markBillAsPaid(@PathVariable Long id) {
+        RecurringBill bill = recurringBillRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Recurring bill not found with id: " + id));
+        
+        bill.setIsPaid(true);
+        bill.setPaidDate(LocalDate.now());
+        
+        return recurringBillRepository.save(bill);
+    }
+
+    /**
+     * Mark bill as unpaid
+     */
+    @PostMapping("/{id}/mark-unpaid")
+    public RecurringBill markBillAsUnpaid(@PathVariable Long id) {
+        RecurringBill bill = recurringBillRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Recurring bill not found with id: " + id));
+        
+        // Check if bill is being moved from next cycle (was paid)
+        boolean wasInNextCycle = bill.getIsPaid();
+        
+        bill.setIsPaid(false);
+        bill.setPaidDate(null);
+        
+        RecurringBill savedBill = recurringBillRepository.save(bill);
+        
+        // Create notification if bill was moved from next cycle to current cycle
+        if (wasInNextCycle && bill.getNextDueDate() != null) {
+            LocalDate dueDate = bill.getNextDueDate();
+            LocalDate today = LocalDate.now();
+            long daysUntilDue = java.time.temporal.ChronoUnit.DAYS.between(today, dueDate);
+            
+            String message = String.format("Bill Alert: %s is now due in %d days (Due: %s). Amount: ₹%.2f",
+                bill.getName() != null ? bill.getName() : "Bill",
+                daysUntilDue,
+                dueDate.toString(),
+                bill.getAmount());
+            
+            notificationService.createNotification(bill.getUser().getId(), message);
+        }
+        
+        return savedBill;
     }
 
     /**

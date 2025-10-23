@@ -24,6 +24,7 @@ import com.expenses_tracker.entity.User;
 import com.expenses_tracker.repository.BudgetRepository;
 import com.expenses_tracker.repository.ExpenseRepository;
 import com.expenses_tracker.repository.UserRepository;
+import com.expenses_tracker.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -38,6 +39,9 @@ public class BudgetController {
 
     @Autowired
     private ExpenseRepository expenseRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Create a new budget
@@ -156,5 +160,55 @@ public class BudgetController {
         LocalDate start = LocalDate.parse(startDate);
         LocalDate end = LocalDate.parse(endDate);
         return budgetRepository.calculateTotalSpendingByUserAndCategory(userId, category, start, end);
+    }
+    
+    /**
+     * Check all budgets for a user and create notifications for over-limit budgets
+     */
+    @PostMapping("/check-alerts/user/{userId}")
+    public Map<String, Object> checkBudgetAlerts(@PathVariable Long userId) {
+        List<Budget> userBudgets = budgetRepository.findByUserId(userId);
+        int alertsCreated = 0;
+        int budgetsChecked = 0;
+        
+        for (Budget budget : userBudgets) {
+            budgetsChecked++;
+            
+            // Calculate total spending for this budget
+            BigDecimal totalSpending = budgetRepository.calculateTotalSpendingByUserAndCategory(
+                userId, budget.getCategory(), budget.getStartDate(), budget.getEndDate());
+            
+            // Calculate remaining budget
+            BigDecimal remainingBudget = budget.getLimitAmount().subtract(totalSpending);
+            
+            // Check if budget exceeded (Over Limit - 100%+)
+            if (remainingBudget.compareTo(BigDecimal.ZERO) <= 0) {
+                String message = String.format("🚨 Budget Alert: You have exceeded your %s budget of ₹%.2f! Current spending: ₹%.2f", 
+                    budget.getCategory(), budget.getLimitAmount(), totalSpending);
+                
+                // Create notification for over limit
+                notificationService.createNotification(userId, message);
+                alertsCreated++;
+            }
+            // Check if spending exceeds 90% of budget limit (Approaching limit)
+            else {
+                BigDecimal threshold = budget.getLimitAmount().multiply(new BigDecimal("0.9"));
+                
+                if (totalSpending.compareTo(threshold) > 0) {
+                    String message = String.format("⚠️ Budget Alert: You have only ₹%.2f left in your %s budget!", 
+                        remainingBudget, budget.getCategory());
+                    
+                    // Create notification for approaching limit
+                    notificationService.createNotification(userId, message);
+                    alertsCreated++;
+                }
+            }
+        }
+        
+        return Map.of(
+            "budgetsChecked", budgetsChecked,
+            "alertsCreated", alertsCreated,
+            "message", alertsCreated + " budget alert(s) created"
+        );
     }
 }

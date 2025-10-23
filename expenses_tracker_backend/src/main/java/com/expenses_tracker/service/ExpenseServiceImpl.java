@@ -160,24 +160,28 @@ public class ExpenseServiceImpl implements ExpenseService {
                 BigDecimal totalSpending = budgetRepository.calculateTotalSpendingByUserAndCategory(
                     userId, category, budget.getStartDate(), budget.getEndDate());
 
-                // Check if spending exceeds 90% of budget limit
-                BigDecimal threshold = budget.getLimitAmount().multiply(new BigDecimal("0.9"));
+                // Calculate remaining budget
+                BigDecimal remainingBudget = budget.getLimitAmount().subtract(totalSpending);
                 
-                if (totalSpending.compareTo(threshold) > 0) {
-                    // Calculate remaining budget
-                    BigDecimal remainingBudget = budget.getLimitAmount().subtract(totalSpending);
+                // Check if budget exceeded (Over Limit - 100%+)
+                if (remainingBudget.compareTo(BigDecimal.ZERO) <= 0) {
+                    String message = String.format("🚨 Budget Alert: You have exceeded your %s budget of ₹%.2f! Current spending: ₹%.2f", 
+                        category, budget.getLimitAmount(), totalSpending);
                     
-                    String message;
-                    if (remainingBudget.compareTo(BigDecimal.ZERO) <= 0) {
-                        message = String.format("Budget Alert: You have exceeded your %s budget of ₹%.2f!", 
-                            category, budget.getLimitAmount());
-                    } else {
-                        message = String.format("Budget Alert: You have only ₹%.2f left in your %s budget!", 
-                            remainingBudget, category);
-                    }
-                    
-                    // Create notification for the user
+                    // Create immediate notification for over limit
                     notificationService.createNotification(userId, message);
+                }
+                // Check if spending exceeds 90% of budget limit (Approaching limit)
+                else {
+                    BigDecimal threshold = budget.getLimitAmount().multiply(new BigDecimal("0.9"));
+                    
+                    if (totalSpending.compareTo(threshold) > 0) {
+                        String message = String.format("⚠️ Budget Alert: You have only ₹%.2f left in your %s budget!", 
+                            remainingBudget, category);
+                        
+                        // Create notification for approaching limit
+                        notificationService.createNotification(userId, message);
+                    }
                 }
             }
         } catch (Exception e) {

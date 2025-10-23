@@ -69,4 +69,12 @@ public class NotificationController {
     public void deleteNotification(@PathVariable Long notificationId) {
         notificationService.deleteNotification(notificationId);
     }
+    
+    /**
+     * Delete all notifications for a user
+     */
+    @DeleteMapping("/user/{userId}/delete-all")
+    public void deleteAllNotifications(@PathVariable Long userId) {
+        notificationService.deleteAllNotifications(userId);
+    }
 }

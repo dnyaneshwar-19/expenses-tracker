@@ -119,20 +119,38 @@ public class NotificationService {
     }
 
     /**
-     * Create a new notification for a user
+     * Create a new notification for a user (only if it doesn't already exist)
      */
     public Notification createNotification(User user, String message) {
+        // Check if similar notification already exists (within last 24 hours)
+        if (hasSimilarRecentNotification(user.getId(), message)) {
+            System.out.println("Skipping duplicate notification: " + message);
+            return null;
+        }
+        
         Notification notification = new Notification(message, user);
         return notificationRepository.save(notification);
     }
 
     /**
-     * Create a new notification for a user by user ID
+     * Create a new notification for a user by user ID (only if it doesn't already exist)
      */
     public Notification createNotification(Long userId, String message) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         return createNotification(user, message);
+    }
+    
+    /**
+     * Check if a similar notification already exists within the last 24 hours
+     */
+    private boolean hasSimilarRecentNotification(Long userId, String message) {
+        LocalDateTime yesterday = LocalDateTime.now().minusHours(24);
+        List<Notification> recentNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        
+        return recentNotifications.stream()
+            .filter(n -> n.getCreatedAt().toLocalDateTime().isAfter(yesterday))
+            .anyMatch(n -> n.getMessage().equals(message));
     }
 
     /**
@@ -184,8 +202,14 @@ public class NotificationService {
      * Delete a notification
      */
     public void deleteNotification(Long notificationId) {
-        Notification notification = notificationRepository.findById(notificationId)
-            .orElseThrow(() -> new RuntimeException("Notification not found with id: " + notificationId));
-        notificationRepository.delete(notification);
+        notificationRepository.deleteById(notificationId);
+    }
+    
+    /**
+     * Delete all notifications for a user
+     */
+    public void deleteAllNotifications(Long userId) {
+        List<Notification> userNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        notificationRepository.deleteAll(userNotifications);
     }
 }

@@ -33,6 +33,10 @@ public class RecurringBill {
     private Integer reminderDaysBefore; // How many days before due date to send reminder (default: 2)
     private Integer reminderHour; // Hour of day to send reminder (0-23, default: 9 for 9 AM)
     private Integer reminderMinute; // Minute of hour to send reminder (0-59, default: 0)
+    
+    // Payment tracking
+    private Boolean isPaid = false; // Whether the current bill cycle is paid
+    private LocalDate paidDate; // Date when bill was marked as paid
 
     // Relationship to User
     @ManyToOne(fetch = FetchType.EAGER)
@@ -157,5 +161,21 @@ public class RecurringBill {
 
     public void setReminderMinute(Integer reminderMinute) {
         this.reminderMinute = reminderMinute;
+    }
+
+    public Boolean getIsPaid() {
+        return isPaid != null ? isPaid : false;
+    }
+
+    public void setIsPaid(Boolean isPaid) {
+        this.isPaid = isPaid;
+    }
+
+    public LocalDate getPaidDate() {
+        return paidDate;
+    }
+
+    public void setPaidDate(LocalDate paidDate) {
+        this.paidDate = paidDate;
     }
 }
