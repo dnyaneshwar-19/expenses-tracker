@@ -21,9 +21,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.expenses_tracker.entity.Budget;
 import com.expenses_tracker.entity.Expense;
+import com.expenses_tracker.entity.RecurringBill;
 import com.expenses_tracker.entity.User;
+import com.expenses_tracker.repository.BudgetRepository;
 import com.expenses_tracker.repository.ExpenseRepository;
+import com.expenses_tracker.repository.RecurringBillRepository;
 import com.expenses_tracker.repository.UserRepository;
 import com.opencsv.CSVWriter;
 
@@ -35,6 +39,12 @@ public class ReportService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private BudgetRepository budgetRepository;
+    
+    @Autowired
+    private RecurringBillRepository recurringBillRepository;
 
     /**
      * Generate CSV report for user expenses
@@ -45,13 +55,19 @@ public class ReportService {
         StringWriter stringWriter = new StringWriter();
         // Write header
         try (CSVWriter csvWriter = new CSVWriter(stringWriter)) {
-            // Write header
+            // Write Expenses Section Header
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{"EXPENSES REPORT"});
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{});
+            
+            // Write expenses header
             csvWriter.writeNext(new String[]{
                 "Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned"
+                "Category", "Payment Method", "Type"
             });
 
-            // Write data
+            // Write expenses data
             for (Expense expense : expenses) {
                 csvWriter.writeNext(new String[]{
                     expense.getId().toString(),
@@ -61,8 +77,63 @@ public class ReportService {
                     expense.getDate().toString(),
                     expense.getCategory(),
                     expense.getPaymentMethod(),
-                    expense.getExpenseType(),
-                    expense.isPinned() ? "Yes" : "No"
+                    expense.getExpenseType()
+                });
+            }
+            
+            // Add spacing
+            csvWriter.writeNext(new String[]{});
+            csvWriter.writeNext(new String[]{});
+            
+            // Write Budgets Section
+            List<Budget> budgets = budgetRepository.findByUserId(userId);
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{"BUDGETS REPORT"});
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{});
+            
+            // Write budgets header
+            csvWriter.writeNext(new String[]{
+                "Budget ID", "Category", "Limit Amount (₹)", "Start Date", "End Date"
+            });
+            
+            // Write budgets data
+            for (Budget budget : budgets) {
+                csvWriter.writeNext(new String[]{
+                    budget.getId().toString(),
+                    budget.getCategory(),
+                    "₹" + budget.getLimitAmount().toString(),
+                    budget.getStartDate().toString(),
+                    budget.getEndDate().toString()
+                });
+            }
+            
+            // Add spacing
+            csvWriter.writeNext(new String[]{});
+            csvWriter.writeNext(new String[]{});
+            
+            // Write Bills Section
+            List<RecurringBill> bills = recurringBillRepository.findByUserId(userId);
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{"RECURRING BILLS REPORT"});
+            csvWriter.writeNext(new String[]{"═══════════════════════════════════════════════════════════"});
+            csvWriter.writeNext(new String[]{});
+            
+            // Write bills header
+            csvWriter.writeNext(new String[]{
+                "Bill ID", "Name", "Amount (₹)", "Category", "Frequency", "Next Due Date", "Description"
+            });
+            
+            // Write bills data
+            for (RecurringBill bill : bills) {
+                csvWriter.writeNext(new String[]{
+                    bill.getId().toString(),
+                    bill.getName(),
+                    "₹" + bill.getAmount().toString(),
+                    bill.getCategory(),
+                    bill.getFrequency(),
+                    bill.getNextDueDate() != null ? bill.getNextDueDate().toString() : "N/A",
+                    bill.getDescription() != null ? bill.getDescription() : ""
                 });
             }
         }
@@ -90,7 +161,7 @@ public class ReportService {
             // Create header row
             Row headerRow = sheet.createRow(0);
             String[] headers = {"Expense ID", "Title", "Description", "Amount (₹)", "Date",
-                "Category", "Payment Method", "Type", "Pinned"};
+                "Category", "Payment Method", "Type"};
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(headers[i]);
@@ -108,7 +179,6 @@ public class ReportService {
                 row.createCell(5).setCellValue(expense.getCategory());
                 row.createCell(6).setCellValue(expense.getPaymentMethod());
                 row.createCell(7).setCellValue(expense.getExpenseType());
-                row.createCell(8).setCellValue(expense.isPinned() ? "Yes" : "No");
             }
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {
@@ -209,11 +279,7 @@ public class ReportService {
             }
             
             // Add payment method
-            pdfContent.append(String.format("     Payment: %s", expense.getPaymentMethod()));
-            if (expense.isPinned()) {
-                pdfContent.append(" [PINNED]");
-            }
-            pdfContent.append("\n\n");
+            pdfContent.append(String.format("     Payment: %s\n\n", expense.getPaymentMethod()));
         }
 
         pdfContent.append("═══════════════════════════════════════════════════════════════════════════\n");
