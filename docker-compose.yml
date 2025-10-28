@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. DATABASE SERVICE
+  # 1. DATABASE SERVICE 
   db:
     image: mysql:8.0
     ports:
@@ -10,16 +10,13 @@ services:
       MYSQL_DATABASE: expenses_tracker
       MYSQL_ROOT_PASSWORD: Dnyaneshwar@19
     volumes:
-      # This saves your friend's NEW data
       - mysql-data:/var/lib/mysql
-      # This loads your INITIAL data from the backup.sql file
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - expense-network
 
-  # 2. BACKEND SERVICE
+  # 2. BACKEND SERVICE - CRITICAL FIX: ADD RESTART POLICY
   backend:
-    # CHANGED: Pulls image from Docker Hub
     image: dnyaneshwar19/expenses-tracker-backend:latest
     ports:
       - "8083:8083"
@@ -30,13 +27,14 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     networks:
       - expense-network
-    # CHANGED: Waits for the 'db' service to start
     depends_on:
-      - db
+      - db 
+    
+    # CRITICAL FIX: Ensures the backend restarts after connection failure until the DB is ready.
+    restart: on-failure 
 
   # 3. FRONTEND SERVICE
   frontend:
-    # CHANGED: Pulls image from Docker Hub
     image: dnyaneshwar19/expenses-tracker-frontend:latest
     ports:
       - "80:80"
