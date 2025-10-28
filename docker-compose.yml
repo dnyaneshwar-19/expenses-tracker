@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 1. DATABASE SERVICE
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: expenses_tracker
+      MYSQL_ROOT_PASSWORD: Dnyaneshwar@19
+    volumes:
+      # This saves your friend's NEW data
+      - mysql-data:/var/lib/mysql
+      # This loads your INITIAL data from the backup.sql file
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - expense-network
+
+  # 2. BACKEND SERVICE
+  backend:
+    # CHANGED: Pulls image from Docker Hub
+    image: dnyaneshwar19/expenses-tracker-backend:latest
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/expenses_tracker?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Dnyaneshwar@19
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - expense-network
+    # CHANGED: Waits for the 'db' service to start
+    depends_on:
+      - db
+
+  # 3. FRONTEND SERVICE
+  frontend:
+    # CHANGED: Pulls image from Docker Hub
+    image: dnyaneshwar19/expenses-tracker-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - expense-network
+
+# 4. NETWORK
+networks:
+  expense-network:
+    driver: bridge
+
+# 5. VOLUME
+volumes:
+  mysql-data:

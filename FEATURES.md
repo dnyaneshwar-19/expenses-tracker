@@ -28,13 +28,13 @@
 
 ### Key Highlights
 - ✅ Complete CRUD operations for expenses
+- ✅ Custome Category Creation
+- ✅ Many Diffrent Fillters to find your expenses
 - ✅ Real-time budget tracking with alerts
 - ✅ Recurring bill management with reminders
-- ✅ Multi-format report generation (CSV)
+- ✅ Report generation (CSV)
 - ✅ Interactive dashboard with charts
-- ✅ Dark mode and accessibility features
-- ✅ Multi-currency support
-- ✅ Role-based access control
+- ✅ Notification of Budget alters & Bill reminder Dark mode 
 - ✅ Session-based secure authentication
 
 ---
