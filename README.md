@@ -11,7 +11,6 @@ Easily view Insights, Budgets, Bills and Reports — all in one dashboard.
 - [📦 Tech Stack](#-tech-stack)
 - [✨ Features](#-features)
 - [🚀 Steps to Run the Application on Your Laptop](#-steps-to-run-the-application-on-your-laptop)
-- [🛠️ Future Enhancements](#%EF%B8%8F-future-enhancements)
 - [💡 Developed By](#-developed-by)
 
 ---
