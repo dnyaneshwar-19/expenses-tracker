@@ -30,7 +30,7 @@
 - ✅ Complete CRUD operations for expenses
 - ✅ Real-time budget tracking with alerts
 - ✅ Recurring bill management with reminders
-- ✅ Multi-format report generation (CSV, Excel, PDF)
+- ✅ Multi-format report generation (CSV)
 - ✅ Interactive dashboard with charts
 - ✅ Dark mode and accessibility features
 - ✅ Multi-currency support
